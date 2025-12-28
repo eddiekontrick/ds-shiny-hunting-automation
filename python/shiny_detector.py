@@ -1,3 +1,11 @@
+"""
+shiny_detector.py
+
+Python-based visual detection and automation controller for a Nintendo DS
+shiny hunting system. This implementation demonstrates the system using
+a Cresselia encounter as a representative example.
+"""
+
 import cv2
 import numpy as np
 import serial
