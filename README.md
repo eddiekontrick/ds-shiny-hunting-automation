@@ -16,10 +16,10 @@ A Python program performs screen-based detection and communicates its decision t
 
 ## System Architecture
 
-Python (Visual Detection)\n
-↓ Serial (USB)\n
-Arduino (Input Controller)\n
-↓\n
+Python (Visual Detection
+↓ Serial (USB)
+Arduino (Input Controller)
+↓
 Nintendo DS Button Inputs
 
 ---
