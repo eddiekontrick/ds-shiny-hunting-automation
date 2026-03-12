@@ -42,7 +42,7 @@ void setup() {
     pinMode(buttonLBPin, OUTPUT);       digitalWrite(buttonLBPin, HIGH);
     pinMode(buttonRBPin, OUTPUT);       digitalWrite(buttonRBPin, HIGH);
 
-    Serial.println("[DEBUG] Pins initialized. Starting boot sequence...");
+    Serial.println("Pins initialized. Starting boot sequence...");
 
     // --- Startup Sequence ---
     delay(7000);
@@ -56,15 +56,15 @@ void setup() {
 // --- Main Loop ---
 void loop() {
     while (!shinyFound) {
-        Serial.println("[DEBUG] Starting new encounter sequence...");
+        Serial.println("Starting new encounter sequence...");
         performEncounterSequence();
-        Serial.println("[DEBUG] Exited encounter sequence.");
+        Serial.println("Exited encounter sequence.");
 
         if (shinyFound) {
-            Serial.println("[DEBUG] Shiny found! Halting loop.");
+            Serial.println("Shiny found! Halting loop.");
             while(true) { delay(1000); }
         } else {
-            Serial.println("[DEBUG] Resetting game...");
+            Serial.println("Resetting game...");
             pressReset(800); // default 400ms soft reset
             delay(1000);
         }
@@ -92,7 +92,7 @@ void performEncounterSequence(){
     delay(5000);
 
     // --- Tell Python to start shiny detection ---
-    Serial.println("[DEBUG] Sending 'start' signal to Python...");
+    Serial.println("Sending 'start' signal to Python...");
     Serial.println("start");
     delay(300);
 
@@ -111,17 +111,17 @@ void performEncounterSequence(){
 
             if (msg == "shiny") {
                 shinyFound = true;
-                Serial.println("[DEBUG] ✅ Shiny confirmed by Python!");
+                Serial.println("Shiny confirmed by Python!");
                 decisionReceived = true;
             } else if (msg == "not_shiny") {
-                Serial.println("[DEBUG] ❌ Not shiny, continuing hunt.");
+                Serial.println("Not shiny, continuing hunt.");
                 decisionReceived = true;
             }
         }
     }
 
     if (!decisionReceived) {
-        Serial.println("[DEBUG] ⚠️ No response from Python within 15s.");
+        Serial.println("No response from Python within 15s.");
     }
 
     delay(1000);
@@ -130,37 +130,30 @@ void performEncounterSequence(){
 // --- Button Press Functions ---
 void pressA(unsigned int duration) {
     digitalWrite(buttonAPin, LOW); delay(duration); digitalWrite(buttonAPin, HIGH);
-    // Serial.println("[DEBUG] Pressing A");
 }
 
 void pressB(unsigned int duration) {
     digitalWrite(buttonBPin, LOW); delay(duration); digitalWrite(buttonBPin, HIGH);
-    // Serial.println("[DEBUG] Pressing B");
 }
 
 void pressStart(unsigned int duration) {
     digitalWrite(buttonStartPin, LOW); delay(duration); digitalWrite(buttonStartPin, HIGH);
-    // Serial.println("[DEBUG] Pressing START");
 }
 
 void pressSelect(unsigned int duration) {
     digitalWrite(buttonSelectPin, LOW); delay(duration); digitalWrite(buttonSelectPin, HIGH);
-    // Serial.println("[DEBUG] Pressing SELECT");
 }
 
 void pressLB(unsigned int duration) {
     digitalWrite(buttonLBPin, LOW); delay(duration); digitalWrite(buttonLBPin, HIGH);
-    // Serial.println("[DEBUG] Pressing L");
 }
 
 void pressRB(unsigned int duration) {
     digitalWrite(buttonRBPin, LOW); delay(duration); digitalWrite(buttonRBPin, HIGH);
-    // Serial.println("[DEBUG] Pressing R");
 }
 
 // --- Soft Reset ---
 void pressReset(unsigned int duration) { // default 400ms press handled via prototype
-    Serial.println("[DEBUG] Performing soft reset (L+R+START+SELECT)...");
     digitalWrite(buttonLBPin, LOW);
     digitalWrite(buttonRBPin, LOW);
     digitalWrite(buttonStartPin, LOW);
@@ -172,6 +165,4 @@ void pressReset(unsigned int duration) { // default 400ms press handled via prot
     digitalWrite(buttonRBPin, HIGH);
     digitalWrite(buttonStartPin, HIGH);
     digitalWrite(buttonSelectPin, HIGH);
-
-    // Serial.println("[DEBUG] Reset complete.");
 }
