@@ -1,0 +1,153 @@
+#include <opencv2/opencv.hpp>
+#include <windows.h>
+#include <iostream>
+#include <string>
+
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    char title[256];
+    GetWindowTextA(hwnd, title, sizeof(title));
+
+    std::string t(title);
+
+    if (t.find("DS Capture") != std::string::npos)
+    {
+        HWND* result = reinterpret_cast<HWND*>(lParam);
+        *result = hwnd;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+int main()
+{
+    HWND hwnd = NULL;
+    EnumWindows(EnumWindowsProc, (LPARAM)&hwnd);
+
+    if (!hwnd)
+    {
+        std::cout << "Window not found\n";
+        return 0;
+    }
+
+    std::cout << "Tracking DS Capture...\n";
+
+    int x_start = 71, x_end = 73;
+    int y_start = 78, y_end = 80;
+
+    cv::Vec3i normal_color(18, 209, 54);
+    int tolerance = 5;
+
+    bool last_state = false;
+
+    while (true)
+    {
+        RECT rect;
+        GetWindowRect(hwnd, &rect);
+
+        int width = rect.right - rect.left;
+        int height = rect.bottom - rect.top;
+
+        HDC hdcWindow = GetWindowDC(hwnd);
+        HDC hdcMem = CreateCompatibleDC(hdcWindow);
+
+        HBITMAP hBitmap = CreateCompatibleBitmap(hdcWindow, width, height);
+        SelectObject(hdcMem, hBitmap);
+
+        BitBlt(
+            hdcMem,
+            0, 0,
+            width, height,
+            hdcWindow,
+            0, 0,
+            SRCCOPY
+        );
+
+        cv::Mat img(height, width, CV_8UC4);
+
+        BITMAPINFOHEADER bi = {
+            sizeof(BITMAPINFOHEADER),
+            width,
+            -height,
+            1,
+            32,
+            BI_RGB
+        };
+
+        GetDIBits(
+            hdcMem,
+            hBitmap,
+            0,
+            height,
+            img.data,
+            (BITMAPINFO*)&bi,
+            DIB_RGB_COLORS
+        );
+
+        cv::Mat roi = img(
+            cv::Rect(
+                x_start,
+                y_start,
+                x_end - x_start,
+                y_end - y_start
+            )
+        );
+
+        cv::Scalar avg = cv::mean(roi);
+
+        cv::Vec3i avg_color(
+            (int)avg[0],
+            (int)avg[1],
+            (int)avg[2]
+        );
+
+        cv::Vec3i diff(
+            abs(avg_color[0] - normal_color[0]),
+            abs(avg_color[1] - normal_color[1]),
+            abs(avg_color[2] - normal_color[2])
+        );
+
+        bool is_shiny =
+            diff[0] > tolerance ||
+            diff[1] > tolerance ||
+            diff[2] > tolerance;
+
+        if (is_shiny != last_state)
+        {
+            if (is_shiny)
+            {
+                std::cout << "SHINY DETECTED\n";
+            }
+            else
+            {
+                std::cout << "Normal Encounter\n";
+            }
+
+            last_state = is_shiny;
+        }
+
+        cv::rectangle(
+            img,
+            cv::Rect(
+                x_start,
+                y_start,
+                x_end - x_start,
+                y_end - y_start
+            ),
+            cv::Scalar(0, 255, 0),
+            1
+        );
+
+        cv::imshow("DS Capture Feed", img);
+
+        if (cv::waitKey(1) == 'q')
+            break;
+
+        DeleteObject(hBitmap);
+        DeleteDC(hdcMem);
+        ReleaseDC(hwnd, hdcWindow);
+    }
+
+    return 0;
+}
